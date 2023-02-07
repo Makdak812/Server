@@ -1,6 +1,11 @@
 from bestchange_api import BestChange
 import json
 import time
+from flask import Flask, jsonify
+from threading import Thread
+
+app = Flask(__name__)
+
 class Downloader:
     def __init__(self):
 
@@ -17,8 +22,8 @@ class Downloader:
                 self.rates = self.api.rates().get()
                 self.exchangers = self.api.exchangers().get()
                 self.clear_rates = self.filter_whitetickers_black_exchengers_add_status_ex_name()
-                with open('clear_rates.json', 'w') as file:
-                    json.dump(self.clear_rates, file)
+                # with open('../var/www/html/clear_rates.json', 'w') as file:
+                #     json.dump(self.clear_rates, file)
             except:
                 print('ОШИБКА получения информации с Bestchange.ru')
             time.sleep(1)
@@ -75,6 +80,11 @@ class Downloader:
             rate['exchange_name'] = ex_name[rate['exchange_id']]
         return clear_rates
 
+@app.route('/get')
+def get_page():
+    return jsonify(downloader.clear_rates)
+
+
 if __name__ == "__main__":
-    app = Downloader()
-    app._update_rates()
+    downloader = Downloader()
+    Thread(target=downloader._update_rates()).start()
